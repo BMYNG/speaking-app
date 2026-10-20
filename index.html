@@ -1,192 +1,32 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>법모영 실전 영어 스피킹 튜터</title>
-  
-  <!-- PWA 및 모바일 설정 -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" href="./bmyng.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="법모영영어">
-  <link rel="apple-touch-icon" href="./bmyng.png">
-
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Pretendard', -apple-system, sans-serif; background: #0f172a; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #f8fafc; }
-    
-    .phone-container { width: 100%; max-width: 430px; height: 100vh; max-height: 880px; background: #1e293b; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    @media (max-width: 480px) { .phone-container { max-height: 100vh; border-radius: 0; } }
-    @media (min-width: 481px) { .phone-container { height: 90vh; border-radius: 28px; border: 1px solid #334155; box-shadow: 0 25px 50px rgba(0,0,0,0.5); } }
-
-    /* 상단 선택 & 상태 바 */
-    .top-status-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #0f172a; border-bottom: 1px solid #334155; gap: 8px; }
-    .scenario-select { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 5px 8px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; outline: none; cursor: pointer; }
-    .role-badge { padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.78rem; white-space: nowrap; }
-    .role-customer { background: #0284c7; color: #ffffff; }
-    .role-clerk { background: #d97706; color: #ffffff; }
-
-    /* 배경 이미지 */
-    .scene-header { position: relative; width: 100%; height: 170px; background: #000; overflow: hidden; }
-    .scene-image { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease; opacity: 1; }
-    .scene-image.fade-out { opacity: 0.2; }
-
-    .progress-bar-container { position: absolute; top: 12px; left: 12px; right: 12px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
-    .progress-bar { height: 100%; width: 20%; background: #38bdf8; transition: width 0.4s ease; }
-    .step-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #ffffff; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 10px; backdrop-filter: blur(4px); }
-
-    /* 대화 카드 */
-    .dialogue-card { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: center; }
-    .bubble { padding: 10px 12px; border-radius: 14px; font-size: 0.88rem; line-height: 1.35; position: relative; }
-    .bubble-speaker { font-size: 0.72rem; font-weight: 700; margin-bottom: 2px; display: block; }
-    
-    .bubble-clerk { background: #334155; color: #f8fafc; border: 1px solid #475569; }
-    .bubble-clerk .bubble-speaker { color: #38bdf8; }
-    .bubble-customer { background: #1e3a8a; color: #f0f9ff; border: 1.5px solid #3b82f6; }
-    .bubble-customer .bubble-speaker { color: #60a5fa; }
-    
-    .bubble-target { border: 2px solid #f59e0b !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
-
-    .btn-listen { position: absolute; top: 8px; right: 8px; background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 10px; padding: 2px 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 2px; }
-    .ko-sub { font-size: 0.78rem; color: #94a3b8; margin-top: 3px; }
-    .user-speech-box { background: #0f172a; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: #cbd5e1; font-style: italic; min-height: 36px; display: flex; align-items: center; border: 1px solid #334155; }
-
-    /* 하단 제어판 */
-    .control-panel { background: #0f172a; padding: 14px; border-top: 1px solid #334155; text-align: center; }
-    .status-msg { font-size: 0.88rem; font-weight: 700; color: #38bdf8; margin-bottom: 4px; min-height: 20px; }
-    .attempt-info { display: flex; justify-content: space-around; font-size: 0.75rem; color: #94a3b8; margin-bottom: 10px; }
-    .btn-primary { background: #2563eb; color: white; border: none; padding: 12px; font-size: 0.92rem; font-weight: 700; border-radius: 12px; width: 100%; cursor: pointer; transition: background 0.2s; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-primary:disabled { background: #475569; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-
-  <div class="phone-container">
-    <!-- 상단 바 & 드롭다운 -->
-    <div class="top-status-bar">
-      <select class="scenario-select" id="scenarioSelect" onchange="changeScenario()">
-        <option value="cafe">☕ 카페 주문</option>
-        <option value="airport">✈️ 공항 입국심사</option>
-        <option value="hotel">🏨 호텔 체크인</option>
-      </select>
-      <span class="role-badge role-customer" id="roleBadge">🙋‍♂️ 손님 연습</span>
-    </div>
-
-    <!-- 배경 이미지 및 진행바 -->
-    <div class="scene-header">
-      <img class="scene-image" id="sceneImg" src="" alt="장면 이미지">
-      <div class="progress-bar-container">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-      <div class="step-badge" id="stepBadge">1단계 / 5</div>
-    </div>
-
-    <!-- 대화 출력부 -->
-    <div class="dialogue-card">
-      <div class="bubble bubble-clerk" id="bubbleA">
-        <button class="btn-listen" id="listenBtnA" onclick="playCurrentTargetGuide('a')">🔊 미리듣기</button>
-        <span class="bubble-speaker" id="speakerA_Label">☕ 상대방 (A)</span>
-        <div id="textA_en">-</div>
-        <div class="ko-sub" id="textA_ko">-</div>
-      </div>
-      
-      <div class="bubble bubble-customer" id="bubbleB">
-        <button class="btn-listen" id="listenBtnB" onclick="playCurrentTargetGuide('b')">🔊 미리듣기</button>
-        <span class="bubble-speaker" id="speakerB_Label">🙋‍♂️ 나 (B)</span>
-        <div id="textB_en">-</div>
-        <div class="ko-sub" id="textB_ko">-</div>
-      </div>
-
-      <div class="user-speech-box" id="userSpeechBox">🎙️ 시작 버튼을 누른 후 소리 내어 읽어보세요.</div>
-    </div>
-
-    <!-- 하단 제어판 -->
-    <div class="control-panel">
-      <div class="status-msg" id="statusMsg">준비가 되면 대화 연습 시작 버튼을 누르세요.</div>
-      <div class="attempt-info">
-        <span>의무 연습: <strong id="stepAttemptCount" style="color:#f59e0b;">0</strong> / 5회</span>
-        <span>정확성 성공: <strong id="successCount" style="color:#10b981;">0</strong> / 2회 필요</span>
-      </div>
-      <button class="btn-primary" id="btnMain" onclick="startCurrentMode()">▶️ 대화 연습 시작하기</button>
-    </div>
-  </div>
-
-  <script>
-    const scenarios = {
-      cafe: [
-        {
-          stepTitle: "1단계: 인사 & 음료 주문",
-          bgImage: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Hi! What can I get started for you today?", ko: "안녕하세요! 어떤 걸로 주문하시겠어요?", keywords: ["what", "started", "today"] },
-          b: { en: "Hi, I'd like an iced Americano, please.", ko: "안녕하세요, 아이스 아메리카노 한 잔 부탁해요.", keywords: ["iced", "americano"] }
-        },
-        {
-          stepTitle: "2단계: 옵션 & 사이즈 선택",
-          bgImage: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Sure thing. What size would you like for that?", ko: "네. 사이즈는 어떤 걸로 도와드릴까요?", keywords: ["what", "size", "like"] },
-          b: { en: "Medium size, please. Can I get less ice in it?", ko: "미디엄 사이즈로 주세요. 얼음은 좀 적게 해주실 수 있나요?", keywords: ["medium", "less", "ice"] }
-        },
-        {
-          stepTitle: "3단계: 디저트 추가 제안",
-          bgImage: "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Got it. Would you like to add any desserts today?", ko: "알겠습니다. 오늘 디저트류도 함께 하시겠어요?", keywords: ["like", "add", "desserts"] },
-          b: { en: "Hmm, which cheesecake do you recommend?", ko: "음, 어떤 치즈케이크를 추천하시나요?", keywords: ["cheesecake", "recommend"] }
-        },
-        {
-          stepTitle: "4단계: 포장 여부 & 결제",
-          bgImage: "https://images.unsplash.com/photo-1556742049-0a67fa6904f7?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Our New York cheesecake is great. For here or to go?", ko: "뉴욕 치즈케이크가 아주 맛있습니다. 드시고 가시나요?", keywords: ["here", "go"] },
-          b: { en: "For here, please. Can I pay with Apple Pay?", ko: "먹고 갈게요. 애플페이로 결제 가능한가요?", keywords: ["here", "apple", "pay"] }
-        },
-        {
-          stepTitle: "5단계: 수령 및 마무리",
-          bgImage: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Yes, absolutely. Please tap here, and I'll give you a buzzer.", ko: "네, 여기에 태그해 주시면 진동벨 드릴게요.", keywords: ["tap", "give", "buzzer"] },
-          b: { en: "Perfect. Thank you so much!", ko: "좋습니다. 정말 감사해요!", keywords: ["perfect", "thank"] }
-        }
-      ],
-      airport: [
-        {
-          stepTitle: "1단계: 입국 목적 질문",
-          bgImage: "https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Passport, please. What is the purpose of your visit?", ko: "여권 보여주세요. 방문 목적이 무엇인가요?", keywords: ["purpose", "visit"] },
-          b: { en: "I'm here for sight-seeing and travel.", ko: "관광 및 여행 차 왔습니다.", keywords: ["travel"] }
-        },
-        {
-          stepTitle: "2단계: 체류 기간 질문",
-          bgImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80",
-          a: { en: "How long will you be staying in the country?", ko: "얼마나 체류할 예정이신가요?", keywords: ["how", "long", "staying"] },
-          b: { en: "I will be staying here for seven days.", ko: "여기서 7일 동안 체류할 예정입니다.", keywords: ["staying", "seven", "days"] }
-        },
-        {
-          stepTitle: "3단계: 숙소 위치 질문",
-          bgImage: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Where will you be staying during your visit?", ko: "체류 기간 동안 어디서 지내시나요?", keywords: ["where", "staying"] },
-          b: { en: "I'm staying at the Grand Hotel in downtown.", ko: "시내에 있는 그랜드 호텔에 머물 예정입니다.", keywords: ["staying", "hotel"] }
-        },
-        {
-          stepTitle: "4단계: 귀국 항공권 확인",
-          bgImage: "https://images.unsplash.com/photo-1517400508447-f8dd518b86db?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Do you have a return ticket to your home country?", ko: "귀국하는 항공권을 가지고 계신가요?", keywords: ["return", "ticket"] },
-          b: { en: "Yes, I have my return flight booked for next Sunday.", ko: "네, 다음 주 일요일 돌아가는 편으로 예약했습니다.", keywords: ["return", "flight"] }
-        },
-        {
-          stepTitle: "5단계: 입국 승인 및 마무리",
-          bgImage: "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Everything looks good. Enjoy your trip!", ko: "모두 확인되었습니다. 즐거운 여행 되세요!", keywords: ["enjoy", "trip"] },
-          b: { en: "Thank you very much. Have a nice day!", ko: "정말 감사합니다. 좋은 하루 보내세요!", keywords: ["thank", "nice"] }
-        }
-      ],
-      hotel: [
-        {
-          stepTitle: "1단계: 체크인 및 예약 확인",
-          bgImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
-          a: { en: "Welcome! How can I help you today?", ko: "어서오세요! 무엇을 도와드릴까요?", keywords: ["how", "help"] },
-          b: { en: "Hi, I'd like to check in, please. I have a reservation.", ko: "안녕하세요, 체크인하고 싶습니다. 예약했습니다.", keywords: ["check", "reservation"] }
-        },
-        {
-          stepTitle: "2단계: 신분증 및 본인 확인",
-          bgImage: "
+[
+  {
+    "stepTitle": "1단계: 입국 목적 질문",
+    "bgImage": "https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80",
+    "a": { "en": "Passport, please. What is the purpose of your visit?", "ko": "여권 보여주세요. 방문 목적이 무엇인가요?", "keywords": ["purpose", "visit"] },
+    "b": { "en": "I'm here for sight-seeing and travel.", "ko": "관광 및 여행 차 왔습니다.", "keywords": ["travel"] }
+  },
+  {
+    "stepTitle": "2단계: 체류 기간 질문",
+    "bgImage": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80",
+    "a": { "en": "How long will you be staying in the country?", "ko": "얼마나 체류할 예정이신가요?", "keywords": ["how", "long", "staying"] },
+    "b": { "en": "I will be staying here for seven days.", "ko": "여기서 7일 동안 체류할 예정입니다.", "keywords": ["staying", "seven", "days"] }
+  },
+  {
+    "stepTitle": "3단계: 숙소 위치 질문",
+    "bgImage": "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80",
+    "a": { "en": "Where will you be staying during your visit?", "ko": "체류 기간 동안 어디서 지내시나요?", "keywords": ["where", "staying"] },
+    "b": { "en": "I'm staying at the Grand Hotel in downtown.", "ko": "시내에 있는 그랜드 호텔에 머물 예정입니다.", "keywords": ["staying", "hotel"] }
+  },
+  {
+    "stepTitle": "4단계: 직업 및 귀국 항공권 확인",
+    "bgImage": "https://images.unsplash.com/photo-1517400508447-f8dd518b86db?auto=format&fit=crop&w=800&q=80",
+    "a": { "en": "Do you have a return ticket to your home country?", "ko": "귀국하는 항공권을 가지고 계신가요?", "keywords": ["return", "ticket"] },
+    "b": { "en": "Yes, I have my return flight booked for next Sunday.", "ko": "네, 다음 주 일요일 돌아가는 편으로 예약했습니다.", "keywords": ["return", "flight"] }
+  },
+  {
+    "stepTitle": "5단계: 입국 승인 및 마무리",
+    "bgImage": "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=800&q=80",
+    "a": { "en": "Everything looks good. Enjoy your trip!", "ko": "모두 확인되었습니다. 즐거운 여행 되세요!", "keywords": ["enjoy", "trip"] },
+    "b": { "en": "Thank you very much. Have a nice day!", "ko": "정말 감사합니다. 좋은 하루 보내세요!", "keywords": ["thank", "nice"] }
+  }
+]
