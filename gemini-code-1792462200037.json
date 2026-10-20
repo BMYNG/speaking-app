@@ -1,0 +1,16 @@
+{
+  "name": "법모영 실전 영어 스피킹",
+  "short_name": "법모영영어",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./bmyng.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
