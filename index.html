@@ -1,11 +1,383 @@
-<!-- PWA Manifest 연결 -->
-<link rel="manifest" href="./manifest.json">
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>법모영 실전 영어 스피킹 튜터</title>
+  
+  <!-- PWA 및 모바일 설정 -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./bmyng.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="법모영영어">
+  <link rel="apple-touch-icon" href="./bmyng.png">
 
-<!-- 브라우저 탭 파비콘 설정 -->
-<link rel="icon" type="image/png" href="./bmyng.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; background: #0f172a; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #f8fafc; }
+    
+    .phone-container { width: 100%; max-width: 430px; height: 100vh; max-height: 880px; background: #1e293b; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    @media (max-width: 480px) { .phone-container { max-height: 100vh; border-radius: 0; } }
+    @media (min-width: 481px) { .phone-container { height: 90vh; border-radius: 28px; border: 1px solid #334155; box-shadow: 0 25px 50px rgba(0,0,0,0.5); } }
 
-<!-- iOS (iPhone/iPad) 전용 홈 화면 아이콘 및 PWA 설정 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="법모영영어">
-<link rel="apple-touch-icon" href="./bmyng.png">
+    /* 상단 상태 헤더 */
+    .top-status-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #0f172a; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+    .role-badge { padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 0.78rem; }
+    .role-customer { background: #0284c7; color: #ffffff; }
+    .role-clerk { background: #d97706; color: #ffffff; }
+
+    /* 상단 배경 이미지 */
+    .scene-header { position: relative; width: 100%; height: 180px; background: #000; overflow: hidden; }
+    .scene-image { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease; opacity: 1; }
+    .scene-image.fade-out { opacity: 0.2; }
+
+    .progress-bar-container { position: absolute; top: 12px; left: 12px; right: 12px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 20%; background: #38bdf8; transition: width 0.4s ease; }
+    .step-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #ffffff; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 10px; backdrop-filter: blur(4px); }
+
+    /* 대화 카드 */
+    .dialogue-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: center; }
+    .bubble { padding: 12px 14px; border-radius: 14px; font-size: 0.92rem; line-height: 1.4; position: relative; }
+    .bubble-speaker { font-size: 0.72rem; font-weight: 700; margin-bottom: 3px; display: block; }
+    
+    .bubble-clerk { background: #334155; color: #f8fafc; border: 1px solid #475569; }
+    .bubble-clerk .bubble-speaker { color: #38bdf8; }
+    .bubble-customer { background: #1e3a8a; color: #f0f9ff; border: 1.5px solid #3b82f6; }
+    .bubble-customer .bubble-speaker { color: #60a5fa; }
+    
+    .bubble-target { border: 2px solid #f59e0b !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+
+    .btn-listen { position: absolute; top: 10px; right: 10px; background: #0f172a; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 12px; padding: 3px 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .ko-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+    .user-speech-box { background: #0f172a; border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; color: #cbd5e1; font-style: italic; min-height: 36px; display: flex; align-items: center; border: 1px solid #334155; }
+
+    /* 하단 제어판 */
+    .control-panel { background: #0f172a; padding: 16px; border-top: 1px solid #334155; text-align: center; }
+    .status-msg { font-size: 0.9rem; font-weight: 700; color: #38bdf8; margin-bottom: 6px; min-height: 22px; }
+    .attempt-info { display: flex; justify-content: space-around; font-size: 0.78rem; color: #94a3b8; margin-bottom: 12px; }
+    .btn-primary { background: #2563eb; color: white; border: none; padding: 14px; font-size: 0.95rem; font-weight: 700; border-radius: 12px; width: 100%; cursor: pointer; transition: background 0.2s; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #475569; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <div class="phone-container">
+    <!-- 상단 바 -->
+    <div class="top-status-bar">
+      <span class="role-badge role-customer" id="roleBadge">🙋‍♂️ 역할: 손님 (Customer)</span>
+      <span style="font-size:0.75rem; color:#94a3b8;">5회 중 2회 성공 미션</span>
+    </div>
+
+    <!-- 배경 이미지 및 진행바 -->
+    <div class="scene-header">
+      <img class="scene-image" id="sceneImg" src="" alt="카페 장면">
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="step-badge" id="stepBadge">1단계 / 5</div>
+    </div>
+
+    <!-- 대화 출력부 -->
+    <div class="dialogue-card">
+      <!-- A: 점원 -->
+      <div class="bubble bubble-clerk" id="bubbleA">
+        <button class="btn-listen" id="listenBtnA" onclick="playCurrentTargetGuide('a')">🔊 미리듣기</button>
+        <span class="bubble-speaker">☕ 점원 (A)</span>
+        <div id="textA_en">-</div>
+        <div class="ko-sub" id="textA_ko">-</div>
+      </div>
+      
+      <!-- B: 손님 -->
+      <div class="bubble bubble-customer" id="bubbleB">
+        <button class="btn-listen" id="listenBtnB" onclick="playCurrentTargetGuide('b')">🔊 미리듣기</button>
+        <span class="bubble-speaker">🙋‍♂️ 손님 (B)</span>
+        <div id="textB_en">-</div>
+        <div class="ko-sub" id="textB_ko">-</div>
+      </div>
+
+      <!-- 내 음성 입력 결과 -->
+      <div class="user-speech-box" id="userSpeechBox">🎙️ 시작 버튼을 누른 후 소리 내어 읽어보세요.</div>
+    </div>
+
+    <!-- 하단 제어판 -->
+    <div class="control-panel">
+      <div class="status-msg" id="statusMsg">준비가 되면 대화 연습 시작 버튼을 누르세요.</div>
+      <div class="attempt-info">
+        <span>의무 연습: <strong id="stepAttemptCount" style="color:#f59e0b;">0</strong> / 5회</span>
+        <span>정확성 성공: <strong id="successCount" style="color:#10b981;">0</strong> / 2회 필요</span>
+      </div>
+      <button class="btn-primary" id="btnMain" onclick="startCurrentMode()">▶️ 대화 연습 시작하기</button>
+    </div>
+  </div>
+
+  <script>
+    const cafeData = [
+      {
+        stepTitle: "1단계: 인사 & 음료 주문",
+        bgImage: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+        a: { en: "Hi! What can I get started for you today?", ko: "안녕하세요! 어떤 걸로 주문하시겠어요?", keywords: ["what", "started", "today"] },
+        b: { en: "Hi, I'd like an iced Americano, please.", ko: "안녕하세요, 아이스 아메리카노 한 잔 부탁해요.", keywords: ["iced", "americano"] }
+      },
+      {
+        stepTitle: "2단계: 옵션 & 사이즈 선택",
+        bgImage: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+        a: { en: "Sure thing. What size would you like for that?", ko: "네. 사이즈는 어떤 걸로 도와드릴까요?", keywords: ["what", "size", "like"] },
+        b: { en: "Medium size, please. Can I get less ice in it?", ko: "미디엄 사이즈로 주세요. 얼음은 좀 적게 해주실 수 있나요?", keywords: ["medium", "less", "ice"] }
+      },
+      {
+        stepTitle: "3단계: 디저트 추가 제안",
+        bgImage: "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=800&q=80",
+        a: { en: "Got it. Would you like to add any desserts today?", ko: "알겠습니다. 오늘 디저트류도 함께 하시겠어요?", keywords: ["like", "add", "desserts"] },
+        b: { en: "Hmm, which cheesecake do you recommend?", ko: "음, 어떤 치즈케이크를 추천하시나요?", keywords: ["cheesecake", "recommend"] }
+      },
+      {
+        stepTitle: "4단계: 포장 여부 & 결제",
+        bgImage: "https://images.unsplash.com/photo-1556742049-0a67fa6904f7?auto=format&fit=crop&w=800&q=80",
+        a: { en: "Our New York cheesecake is great. For here or to go?", ko: "뉴욕 치즈케이크가 아주 맛있습니다. 드시고 가시나요?", keywords: ["here", "go"] },
+        b: { en: "For here, please. Can I pay with Apple Pay?", ko: "먹고 갈게요. 애플페이로 결제 가능한가요?", keywords: ["here", "apple", "pay"] }
+      },
+      {
+        stepTitle: "5단계: 수령 및 마무리",
+        bgImage: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+        a: { en: "Yes, absolutely. Please tap here, and I'll give you a buzzer.", ko: "네, 여기에 태그해 주시면 진동벨 드릴게요.", keywords: ["tap", "give", "buzzer"] },
+        b: { en: "Perfect. Thank you so much!", ko: "좋습니다. 정말 감사해요!", keywords: ["perfect", "thank"] }
+      }
+    ];
+
+    let currentMode = 'customer'; 
+    let currentTurn = 0;
+    let stepAttempts = 0;
+    let stepSuccesses = 0;
+    let modePassedSteps = 0;
+    let recognition = null;
+    let isListening = false;
+
+    const synth = window.speechSynthesis;
+
+    // 브라우저 기본 무료 Web Speech API TTS
+    function playTTS(text, callback) {
+      synth.cancel();
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'en-US';
+      utt.rate = 0.95;
+      if (callback) utt.onend = callback;
+      synth.speak(utt);
+    }
+
+    function updateRoleUI() {
+      const badge = document.getElementById('roleBadge');
+      const bubbleA = document.getElementById('bubbleA');
+      const bubbleB = document.getElementById('bubbleB');
+      const listenBtnA = document.getElementById('listenBtnA');
+      const listenBtnB = document.getElementById('listenBtnB');
+
+      bubbleA.classList.remove('bubble-target');
+      bubbleB.classList.remove('bubble-target');
+
+      if (currentMode === 'customer') {
+        badge.innerText = "🙋‍♂️ 1단계: 손님 연습 (Customer)";
+        badge.className = "role-badge role-customer";
+        bubbleB.classList.add('bubble-target');
+        
+        listenBtnA.style.display = 'none';
+        listenBtnB.style.display = 'flex';
+      } else {
+        badge.innerText = "☕ 2단계: 점원 연습 (Clerk)";
+        badge.className = "role-badge role-clerk";
+        bubbleA.classList.add('bubble-target');
+        
+        listenBtnA.style.display = 'flex';
+        listenBtnB.style.display = 'none';
+      }
+    }
+
+    function renderTurn() {
+      const data = cafeData[currentTurn];
+      const progressPercent = ((currentTurn + 1) / cafeData.length) * 100;
+      
+      const imgElem = document.getElementById('sceneImg');
+      if (imgElem.src !== data.bgImage) {
+        imgElem.classList.add('fade-out');
+        setTimeout(() => { imgElem.src = data.bgImage; imgElem.classList.remove('fade-out'); }, 150);
+      }
+
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+      document.getElementById('stepBadge').innerText = `${data.stepTitle} (${currentTurn + 1}/5)`;
+      
+      document.getElementById('textA_en').innerText = data.a.en;
+      document.getElementById('textA_ko').innerText = data.a.ko;
+      document.getElementById('textB_en').innerText = data.b.en;
+      document.getElementById('textB_ko').innerText = data.b.ko;
+
+      document.getElementById('stepAttemptCount').innerText = stepAttempts;
+      document.getElementById('successCount').innerText = stepSuccesses;
+      document.getElementById('userSpeechBox').innerText = "🎙️ 음성 인식 준비 중...";
+      
+      updateRoleUI();
+    }
+
+    function playCurrentTargetGuide(speaker) {
+      stopSTT();
+      const data = cafeData[currentTurn];
+      const textToPlay = (speaker === 'a') ? data.a.en : data.b.en;
+      
+      document.getElementById('statusMsg').innerText = "🎧 미리듣기 음성 재생 중...";
+      playTTS(textToPlay, () => {
+        document.getElementById('statusMsg').innerText = "🎙️ 소리 내어 말해보세요!";
+        setTimeout(activateMicrophone, 300);
+      });
+    }
+
+    function startCurrentMode() {
+      currentTurn = 0;
+      modePassedSteps = 0;
+      document.getElementById('btnMain').disabled = true;
+      runStep();
+    }
+
+    function runStep() {
+      if (currentTurn >= cafeData.length) {
+        evaluateModeResult();
+        return;
+      }
+
+      stepAttempts = 0;
+      stepSuccesses = 0;
+      renderTurn();
+
+      const data = cafeData[currentTurn];
+
+      if (currentMode === 'customer') {
+        document.getElementById('statusMsg').innerText = "🤖 점원 대사 듣는 중...";
+        playTTS(data.a.en, () => {
+          document.getElementById('statusMsg').innerText = "🎙️ (미리듣기는 🔊 버튼) 5회 중 1번째 발음!";
+          setTimeout(activateMicrophone, 400);
+        });
+      } else {
+        document.getElementById('statusMsg').innerText = "🎙️ (미리듣기는 🔊 버튼) 5회 중 1번째 발음!";
+        setTimeout(activateMicrophone, 400);
+      }
+    }
+
+    function activateMicrophone() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 사용을 권장합니다.");
+        return;
+      }
+
+      if (isListening) stopSTT();
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      document.getElementById('userSpeechBox').innerText = "듣고 있습니다... 말씀해 주세요.";
+
+      recognition.onstart = () => { isListening = true; };
+
+      recognition.onresult = (event) => {
+        isListening = false;
+        const spokenText = event.results[0][0].transcript.toLowerCase();
+        document.getElementById('userSpeechBox').innerText = `🗣️ 인식 결과: "${spokenText}"`;
+        
+        stepAttempts++;
+        
+        const currentData = cafeData[currentTurn];
+        const targetKeywords = (currentMode === 'customer') ? currentData.b.keywords : currentData.a.keywords;
+        const isMatched = targetKeywords.every(kw => spokenText.includes(kw));
+
+        if (isMatched) {
+          stepSuccesses++;
+        }
+
+        document.getElementById('stepAttemptCount').innerText = stepAttempts;
+        document.getElementById('successCount').innerText = stepSuccesses;
+
+        if (stepAttempts < 5) {
+          const feedback = isMatched ? "👍 좋습니다! 다음 회차 발음하세요." : "🔄 명확하게 다시 발음해보세요.";
+          document.getElementById('statusMsg').innerText = `${feedback} (${stepAttempts}/5회 완료)`;
+          setTimeout(activateMicrophone, 1200);
+        } else {
+          if (stepSuccesses >= 2) {
+            modePassedSteps++;
+            document.getElementById('statusMsg').innerText = `✨ Step 통과! (5회 중 ${stepSuccesses}회 정확)`;
+            
+            const nextAction = () => {
+              currentTurn++;
+              setTimeout(runStep, 600);
+            };
+
+            if (currentMode === 'clerk') {
+              playTTS(currentData.b.en, nextAction);
+            } else {
+              playTTS("Great job!", nextAction);
+            }
+          } else {
+            document.getElementById('statusMsg').innerText = `⚠️ 통과 실패 (정확성 2회 미달: ${stepSuccesses}/2)`;
+            playTTS("Let's try next step.", () => {
+              currentTurn++;
+              setTimeout(runStep, 600);
+            });
+          }
+        }
+      };
+
+      recognition.onerror = () => {
+        isListening = false;
+        stepAttempts++;
+        document.getElementById('stepAttemptCount').innerText = stepAttempts;
+
+        if (stepAttempts < 5) {
+          document.getElementById('statusMsg').innerText = `⚠️ 음성이 인식되지 않았습니다. (${stepAttempts}/5회)`;
+          setTimeout(activateMicrophone, 1000);
+        } else {
+          if (stepSuccesses >= 2) {
+            modePassedSteps++;
+            currentTurn++;
+            setTimeout(runStep, 600);
+          } else {
+            document.getElementById('statusMsg').innerText = "⚠️ 통과 실패 (5회 종료)";
+            currentTurn++;
+            setTimeout(runStep, 600);
+          }
+        }
+      };
+
+      try { recognition.start(); } catch (e) { console.error(e); }
+    }
+
+    function stopSTT() {
+      if (recognition && isListening) { recognition.stop(); isListening = false; }
+    }
+
+    function evaluateModeResult() {
+      if (modePassedSteps === cafeData.length) {
+        if (currentMode === 'customer') {
+          alert("🎉 축하합니다! 손님 모드 5회 발음 미션을 완수하셨습니다!\n\n이제 [2단계: 점원(Clerk) 연습]으로 전환됩니다!");
+          currentMode = 'clerk';
+          document.getElementById('btnMain').disabled = false;
+          document.getElementById('btnMain').innerText = "▶️ 2단계: 점원(Clerk) 연습 시작";
+          document.getElementById('statusMsg').innerText = "점원 모드 준비 완료! 시작 버튼을 누르세요.";
+          renderTurn();
+        } else {
+          alert("🏆 대단합니다! Cafe 다이얼로그의 손님 및 점원 역할을 모두 마스터하셨습니다!");
+          document.getElementById('btnMain').disabled = false;
+          document.getElementById('btnMain').innerText = "🔄 카페 다이얼로그 처음부터 다시하기";
+          currentMode = 'customer';
+          renderTurn();
+        }
+      } else {
+        alert(`💡 ${cafeData.length}개 단계 중 ${modePassedSteps}개 단계만 성공했습니다.\n모든 단계에서 2회 이상 정확하게 발음하여 완벽히 통과해보세요!`);
+        document.getElementById('btnMain').disabled = false;
+        document.getElementById('btnMain').innerText = "🔄 완벽 통과 재도전하기";
+        renderTurn();
+      }
+    }
+
+    window.onload = renderTurn;
+  </script>
+</body>
+</html>
